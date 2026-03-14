@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Starttab - 简洁高效的新标签页</title>
+  <!-- SEO 优化 -->
+  <meta name="description" content="Starttab 是一款简洁高效的新标签页工具，支持自定义捷径、更换壁纸、深色模式，集成必应、百度等搜索引擎。">
+  <meta name="keywords" content="Starttab,新标签页,自定义主页,简洁主页,高效搜索,必应搜索,百度搜索">
+  <meta name="author" content="Starttab">
+  <meta property="og:title" content="Starttab - 简洁高效的新标签页">
+  <meta property="og:description" content="Starttab 是一款简洁高效的新标签页工具，支持自定义捷径、更换壁纸、深色模式。">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://starttab.rth1.xyz/">
+  <!-- 样式 -->
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #333333;
+      --card-bg: #f5f5f5;
+      --accent-color: #0078d7;
+      --border-color: #e0e0e0;
+    }
+
+    .dark-mode {
+      --bg-color: #121212;
+      --text-color: #e0e0e0;
+      --card-bg: #1e1e1e;
+      --accent-color: #8ab4f8;
+      --border-color: #333333;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      padding: 20px;
+      position: relative;
+    }
+
+    /* 背景壁纸样式 */
+    .wallpaper {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      z-index: -1;
+      opacity: 0.2;
+    }
+
+    /* 头部导航 */
+    .header {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 50px;
+    }
+
+    .header-btn {
+      background: none;
+      border: none;
+      color: var(--text-color);
+      cursor: pointer;
+      font-size: 18px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s;
+    }
+
+    .header-btn:hover {
+      background-color: var(--card-bg);
+    }
+
+    /* 主内容区 */
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+    }
+
+    .logo {
+      font-size: 48px;
+      font-weight: 700;
+      color: var(--accent-color);
+      display: none; /* 默认隐藏LOGO */
+    }
+
+    .logo.visible {
+      display: block;
+    }
+
+    /* 搜索区域 */
+    .search-container {
+      width: 100%;
+      position: relative;
+    }
+
+    .search-bar {
+      width: 100%;
+      padding: 15px 50px 15px 20px;
+      border: 1px solid var(--border-color);
+      border-radius: 30px;
+      background-color: var(--card-bg);
+      color: var(--text-color);
+      font-size: 16px;
+      outline: none;
+    }
+
+    .search-engine {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-color);
+      cursor: pointer;
+    }
+
+    /* 捷径区域 */
+    .shortcuts-container {
+      width: 100%;
+      display: none; /* 默认关闭 */
+      margin-top: 20px;
+    }
+
+    .shortcuts-container.visible {
+      display: block;
+    }
+
+    .shortcuts-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .shortcuts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 15px;
+    }
+
+    .shortcut-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 15px;
+      border-radius: 8px;
+      background-color: var(--card-bg);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .shortcut-item:hover {
+      transform: translateY(-3px);
+    }
+
+    .shortcut-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+    }
+
+    .shortcut-name {
+      font-size: 14px;
+      text-align: center;
+    }
+
+    /* 模态窗口通用样式 */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background-color: var(--card-bg);
+      border-radius: 10px;
+      padding: 25px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-color);
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    /* 捷径窗口样式 */
+    .shortcut-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .shortcut-form input {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    .shortcut-form button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      background-color: var(--accent-color);
+      color: white;
+      cursor: pointer;
+    }
+
+    /* 设置窗口样式 */
+    .settings-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .upload-btn {
+      padding: 8px 15px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      cursor: pointer;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 20px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+      background-color: var(--accent-color);
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    /* 帮助窗口样式 */
+    .help-content {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .browser-guide {
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 15px;
+    }
+
+    .browser-guide h4 {
+      margin-bottom: 10px;
+      color: var(--accent-color);
+    }
+
+    .browser-guide ol {
+      padding-left: 20px;
+      line-height: 1.6;
+    }
+
+    /* 响应式适配 */
+    @media (max-width: 600px) {
+      .container {
+        padding: 0 10px;
+      }
+      .search-bar {
+        padding: 12px 40px 12px 15px;
+      }
+      .shortcuts-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 背景壁纸 -->
+  <div class="wallpaper" id="wallpaper"></div>
+
+  <!-- 头部导航 -->
+  <div class="header">
+    <button class="header-btn" id="githubBtn" title="GitHub仓库">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+      </svg>
+    </button>
+    <button class="header-btn" id="helpBtn" title="设置帮助">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8.92 2.69c.013 0 .026.004.039.006a6.6 6.6 0 0 1 3.094 5.579 6.6 6.6 0 0 1-1.52 4.21 6.6 6.6 0 0 1-4.21 1.52 6.6 6.6 0 0 1-5.58-3.094 6.6 6.6 0 0 1 1.52-4.21 6.6 6.6 0 0 1 4.21-1.52 6.6 6.6 0 0 1 3.094 5.579 6.6 6.6 0 0 1-1.52 4.21 6.6 6.6 0 0 1-4.21 1.52 6.6 6.6 0 0 1-5.58-3.094 6.6 6.6 0 0 1 1.52-4.21 6.6 6.6 0 0 1 4.21-1.52zm-1.25 9.199c.6 0 1.08-.54.946-1.129-.09-.396-.396-.792-.792-.982-.4-.19-.8-.09-1.1.19-.3.28-.4.68-.21 1.079.19.4.59.69.99.5zm1.5-9.999c-.6 0-1.08.54-.946 1.129.09.396.396.792.792.982.4.19.8.09 1.1-.19.3-.28.4-.68.21-1.079-.19-.4-.59-.69-.99-.5z"/>
+      </svg>
+    </button>
+    <button class="header-btn" id="settingsBtn" title="设置">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+        <path d="M8.21 2.047a5.5 5.5 0 0 1 3.066 11.135c.068.02.123.047.163.075l2.57 2.57a.5.5 0 0 1-.708.708l-2.57-2.57a.5.5 0 0 1-.075-.163 5.5 5.5 0 0 1-11.135-3.066 3.5 3.5 0 1 1 7.072-1.067 3.5 3.5 0 0 1 1.067 7.072 5.478 5.478 0 0 1-.06 0 5.5 5.5 0 0 1 2.047-8.21z"/>
+      </svg>
+    </button>
+    <button class="header-btn" id="themeBtn" title="切换主题">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" id="themeIcon">
+        <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L1.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L1.05 2.828a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- 主内容区 -->
+  <div class="container">
+    <div class="logo" id="logo">Starttab</div>
+    
+    <!-- 搜索区域 -->
+    <div class="search-container">
+      <input type="text" class="search-bar" id="searchBar" placeholder="输入搜索内容或网址...">
+      <select class="search-engine" id="searchEngine">
+        <option value="bing">必应</option>
+        <option value="baidu">百度</option>
+        <option value="360">360搜索</option>
+        <option value="url">纯网址</option>
+      </select>
+    </div>
+
+    <!-- 捷径区域 -->
+    <div class="shortcuts-container" id="shortcutsContainer">
+      <div class="shortcuts-header">
+        <h3>我的捷径</h3>
+        <button class="header-btn" id="addShortcutBtn">+</button>
+      </div>
+      <div class="shortcuts-grid" id="shortcutsGrid"></div>
+    </div>
+  </div>
+
+  <!-- 捷径模态窗口 -->
+  <div class="modal" id="shortcutsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>我的捷径</h3>
+        <button class="modal-close" id="shortcutsModalClose">&times;</button>
+      </div>
+      <div class="shortcut-form">
+        <input type="text" id="shortcutName" placeholder="捷径名称">
+        <input type="text" id="shortcutUrl" placeholder="网址">
+        <button id="saveShortcutBtn">添加</button>
+      </div>
+      <div class="shortcuts-grid" id="modalShortcutsGrid"></div>
+    </div>
+  </div>
+
+  <!-- 设置模态窗口 -->
+  <div class="modal" id="settingsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>设置</h3>
+        <button class="modal-close" id="settingsModalClose">&times;</button>
+      </div>
+      <div class="settings-list">
+        <div class="setting-item">
+          <span>修改背景</span>
+          <label class="upload-btn">
+            上传壁纸
+            <input type="file" id="wallpaperUpload" accept="image/*" style="display: none;">
+          </label>
+        </div>
+        <div class="setting-item">
+          <span>显示LOGO</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="logoToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <span>显示捷径栏</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="shortcutsToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 帮助模态窗口 -->
+  <div class="modal" id="helpModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>设置帮助</h3>
+        <button class="modal-close" id="helpModalClose">&times;</button>
+      </div>
+      <div class="help-content">
+        <p>请将您的浏览器主页设置为：<strong>https://starttab.rth1.xyz/</strong></p>
+        
+        <div class="browser-guide">
+          <h4>Chrome / Edge 浏览器</h4>
+          <ol>
+            <li>点击浏览器右上角的三个点图标</li>
+            <li>选择「设置」</li>
+            <li>在左侧菜单中选择「外观」</li>
+            <li>开启「显示主页按钮」</li>
+            <li>点击「更改」，输入 https://starttab.rth1.xyz/</li>
+            <li>在「启动时」选项中选择「打开特定页面或一组页面」</li>
+            <li>点击「添加新页面」，输入 https://starttab.rth1.xyz/</li>
+          </ol>
+        </div>
+
+        <div class="browser-guide">
+          <h4>Firefox 浏览器</h4>
+          <ol>
+            <li>点击浏览器右上角的三个横线图标</li>
+            <li>选择「设置」</li>
+            <li>在「常规」选项卡中找到「启动时」</li>
+            <li>选择「显示主页」</li>
+            <li>在「主页」栏中输入 https://starttab.rth1.xyz/</li>
+          </ol>
+        </div>
+
+        <div class="browser-guide">
+          <h4>360浏览器</h4>
+          <ol>
+            <li>点击浏览器右上角的工具图标</li>
+            <li>选择「选项」</li>
+            <li>在「基本设置」中找到「启动时打开」</li>
+            <li>选择「主页」</li>
+            <li>在「主页设置」中输入 https://starttab.rth1.xyz/</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 存储管理
+    const Storage = {
+      get: (key, defaultValue = null) => {
+        const value = localStorage.getItem(key);
+        return value ? JSON.parse(value) : defaultValue;
+      },
+      set: (key, value) => {
+        localStorage.setItem(key, JSON.stringify(value));
+      }
+    };
+
+    // 初始化默认捷径
+    const defaultShortcuts = [
+      { name: "知乎", url: "https://www.zhihu.com" },
+      { name: "B站", url: "https://www.bilibili.com" },
+      { name: "微博", url: "https://weibo.com" },
+      { name: "淘宝", url: "https://www.taobao.com" },
+      { name: "京东", url: "https://www.jd.com" },
+      { name: "网易云", url: "https://music.163.com" }
+    ];
+
+    // 页面加载初始化
+    document.addEventListener('DOMContentLoaded', () => {
+      // 初始化捷径
+      initShortcuts();
+      // 初始化设置
+      initSettings();
+      // 初始化事件监听
+      initEventListeners();
+      // 初始化主题
+      initTheme();
+      // 初始化壁纸
+      initWallpaper();
+    });
+
+    // 初始化捷径
+    function initShortcuts() {
+      let shortcuts = Storage.get('shortcuts', defaultShortcuts);
+      renderShortcuts(shortcuts);
+      renderModalShortcuts(shortcuts);
+    }
+
+    // 渲染捷径到主页面
+    function renderShortcuts(shortcuts) {
+      const shortcutsGrid = document.getElementById('shortcutsGrid');
+      shortcutsGrid.innerHTML = '';
+      
+      shortcuts.forEach((shortcut, index) => {
+        const shortcutItem = document.createElement('div');
+        shortcutItem.className = 'shortcut-item';
+        shortcutItem.onclick = () => window.open(shortcut.url, '_blank');
+        
+        // 生成快捷方式图标（取名称第一个字符）
+        const iconChar = shortcut.name.charAt(0);
+        
+        shortcutItem.innerHTML = `
+          <div class="shortcut-icon">${iconChar}</div>
+          <div class="shortcut-name">${shortcut.name}</div>
+        `;
+        
+        shortcutsGrid.appendChild(shortcutItem);
+      });
+    }
+
+    // 渲染捷径到模态窗口
+    function renderModalShortcuts(shortcuts) {
+      const modalShortcutsGrid = document.getElementById('modalShortcutsGrid');
+      modalShortcutsGrid.innerHTML = '';
+      
+      shortcuts.forEach((shortcut, index) => {
+        const shortcutItem = document.createElement('div');
+        shortcutItem.className = 'shortcut-item';
+        
+        const iconChar = shortcut.name.charAt(0);
+        
+        shortcutItem.innerHTML = `
+          <div class="shortcut-icon">${iconChar}</div>
+          <div class="shortcut-name">${shortcut.name}</div>
+          <button class="header-btn" style="position:absolute;top:5px;right:5px;" onclick="deleteShortcut(${index})">×</button>
+        `;
+        
+        modalShortcutsGrid.appendChild(shortcutItem);
+      });
+    }
+
+    // 添加捷径
+    function addShortcut() {
+      const nameInput = document.getElementById('shortcutName');
+      const urlInput = document.getElementById('shortcutUrl');
+      
+      const name = nameInput.value.trim();
+      let url = urlInput.value.trim();
+      
+      if (!name || !url) return alert('请输入名称和网址');
+      
+      // 补全网址前缀
+      if (!url.startsWith('http')) {
+        url = 'https://' + url;
+      }
+      
+      const shortcuts = Storage.get('shortcuts', defaultShortcuts);
+      shortcuts.push({ name, url });
+      
+      Storage.set('shortcuts', shortcuts);
+      initShortcuts();
+      
+      // 清空输入框
+      nameInput.value = '';
+      urlInput.value = '';
+    }
+
+    // 删除捷径
+    window.deleteShortcut = function(index) {
+      const shortcuts = Storage.get('shortcuts', defaultShortcuts);
+      shortcuts.splice(index, 1);
+      Storage.set('shortcuts', shortcuts);
+      initShortcuts();
+    }
+
+    // 初始化设置
+    function initSettings() {
+      // LOGO显示设置
+      const logoToggle = document.getElementById('logoToggle');
+      const logo = document.getElementById('logo');
+      const showLogo = Storage.get('showLogo', false);
+      
+      logoToggle.checked = showLogo;
+      if (showLogo) logo.classList.add('visible');
+      
+      logoToggle.addEventListener('change', (e) => {
+        Storage.set('showLogo', e.target.checked);
+        if (e.target.checked) {
+          logo.classList.add('visible');
+        } else {
+          logo.classList.remove('visible');
+        }
+      });
+      
+      // 捷径栏显示设置
+      const shortcutsToggle = document.getElementById('shortcutsToggle');
+      const shortcutsContainer = document.getElementById('shortcutsContainer');
+      const showShortcuts = Storage.get('showShortcuts', false);
+      
+      shortcutsToggle.checked = showShortcuts;
+      if (showShortcuts) shortcutsContainer.classList.add('visible');
+      
+      shortcutsToggle.addEventListener('change', (e) => {
+        Storage.set('showShortcuts', e.target.checked);
+        if (e.target.checked) {
+          shortcutsContainer.classList.add('visible');
+        } else {
+          shortcutsContainer.classList.remove('visible');
+        }
+      });
+      
+      // 壁纸上传
+      document.getElementById('wallpaperUpload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            const wallpaperUrl = event.target.result;
+            Storage.set('wallpaper', wallpaperUrl);
+            document.getElementById('wallpaper').style.backgroundImage = `url(${wallpaperUrl})`;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    // 初始化主题
+    function initTheme() {
+      const themeBtn = document.getElementById('themeBtn');
+      const themeIcon = document.getElementById('themeIcon');
+      const isDark = Storage.get('darkMode', false);
+      
+      if (isDark) {
+        document.body.classList.add('dark-mode');
+        themeIcon.innerHTML = `
+          <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278zM4.858 1.311A7.269 7.269 0 0 0 1.025 7.71c0 4.02 3.279 7.276 7.319 7.276a7.316 7.316 0 0 0 5.205-2.162c-.337.042-.68.063-1.029.063-4.61 0-8.343-3.714-8.343-8.29 0-1.167.242-2.278.681-3.286z"/>
+        `;
+      }
+      
+      themeBtn.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        const newMode = document.body.classList.contains('dark-mode');
+        Storage.set('darkMode', newMode);
+        
+        if (newMode) {
+          themeIcon.innerHTML = `
+            <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278zM4.858 1.311A7.269 7.269 0 0 0 1.025 7.71c0 4.02 3.279 7.276 7.319 7.276a7.316 7.316 0 0 0 5.205-2.162c-.337.042-.68.063-1.029.063-4.61 0-8.343-3.714-8.343-8.29 0-1.167.242-2.278.681-3.286z"/>
+          `;
+        } else {
+          themeIcon.innerHTML = `
+            <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L1.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L1.05 2.828a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/>
+          `;
+        }
+      });
+    }
+
+    // 初始化壁纸
+    function initWallpaper() {
+      const wallpaperUrl = Storage.get('wallpaper');
+      if (wallpaperUrl) {
+        document.getElementById('wallpaper').style.backgroundImage = `url(${wallpaperUrl})`;
+      }
+    }
+
+    // 初始化事件监听
+    function initEventListeners() {
+      // 右键禁用并打开捷径窗口
+      document.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        document.getElementById('shortcutsModal').classList.add('active');
+      });
+      
+      // 搜索功能
+      const searchBar = document.getElementById('searchBar');
+      const searchEngine = document.getElementById('searchEngine');
+      
+      searchBar.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          performSearch();
+        }
+      });
+      
+      // 模态窗口关闭按钮
+      document.getElementById('shortcutsModalClose').addEventListener('click', () => {
+        document.getElementById('shortcutsModal').classList.remove('active');
+      });
+      
+      document.getElementById('settingsModalClose').addEventListener('click', () => {
+        document.getElementById('settingsModal').classList.remove('active');
+      });
+      
+      document.getElementById('helpModalClose').addEventListener('click', () => {
+        document.getElementById('helpModal').classList.remove('active');
+      });
+      
+      // 按钮点击事件
+      document.getElementById('settingsBtn').addEventListener('click', () => {
+        document.getElementById('settingsModal').classList.add('active');
+      });
+      
+      document.getElementById('helpBtn').addEventListener('click', () => {
+        document.getElementById('helpModal').classList.add('active');
+      });
+      
+      document.getElementById('addShortcutBtn').addEventListener('click', () => {
+        document.getElementById('shortcutsModal').classList.add('active');
+      });
+      
+      document.getElementById('saveShortcutBtn').addEventListener('click', addShortcut);
+      
+      // GitHub按钮（后续自行配置）
+      document.getElementById('githubBtn').addEventListener('click', () => {
+        window.open('#', '_blank'); // 替换为实际的GitHub地址
+      });
+      
+      // 点击模态窗口外部关闭
+      window.addEventListener('click', (e) => {
+        const modals = ['shortcutsModal', 'settingsModal', 'helpModal'];
+        modals.forEach(modalId => {
+          const modal = document.getElementById(modalId);
+          if (e.target === modal) {
+            modal.classList.remove('active');
+          }
+        });
+      });
+    }
+
+    // 执行搜索
+    function performSearch() {
+      const query = document.getElementById('searchBar').value.trim();
+      const engine = document.getElementById('searchEngine').value;
+      
+      if (!query) return;
+      
+      let url = '';
+      
+      switch (engine) {
+        case 'bing':
+          url = `https://cn.bing.com/search?q=${encodeURIComponent(query)}`;
+          break;
+        case 'baidu':
+          url = `https://www.baidu.com/s?wd=${encodeURIComponent(query)}`;
+          break;
+        case '360':
+          url = `https://www.so.com/s?q=${encodeURIComponent(query)}`;
+          break;
+        case 'url':
+          url = query.startsWith('http') ? query : `https://${query}`;
+          break;
+      }
+      
+      window.open(url, '_blank');
+      document.getElementById('searchBar').value = '';
+    }
+  </script>
+</body>
+</html>
